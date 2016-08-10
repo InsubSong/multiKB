@@ -8,7 +8,7 @@ LPCTSTR lpszClass = TEXT("Practice");
 int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
 	, LPSTR lpszCmdParam, int nCmdShow)
 {
-	HWND hWnd;
+	HWND hWnd; 
 	MSG Message;
 	WNDCLASS WndClass;
 	g_hInst = hInstance;
@@ -36,22 +36,24 @@ int APIENTRY WinMain(HINSTANCE hInstance, HINSTANCE hPrevInstance
 
 	Rid[0].usUsagePage = 0x01;
 	Rid[0].usUsage = 0x06;
-	Rid[0].dwFlags = RIDEV_NOLEGACY;
+	Rid[0].dwFlags = RIDEV_INPUTSINK; // RIDEV_NOLEGACY;
 	Rid[0].hwndTarget = hWnd;
 
 	Rid[1].usUsagePage = 0x01;
 	Rid[1].usUsage = 0x06;
-	Rid[1].dwFlags = RIDEV_NOLEGACY;
+	Rid[1].dwFlags = RIDEV_INPUTSINK; // RIDEV_NOLEGACY;
 	Rid[1].hwndTarget = hWnd;
+
+	Rid[2].usUsagePage = 0x01;
+	Rid[2].usUsage = 0x06;
+	Rid[2].dwFlags = RIDEV_NOLEGACY;
+	Rid[2].hwndTarget = hWnd;
 
 	if (RegisterRawInputDevices(Rid, 2, sizeof(RAWINPUTDEVICE)) == FALSE) {
 		printf("Registration Fail!\n");
-	}
-	else {
+	} else {
 		printf("Registration Success!\n");
 	}
-
-
 
 	// custom end
 	while (GetMessage(&Message, 0, 0, 0)) {
@@ -67,7 +69,7 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_CREATE:
 		AllocConsole();
 		freopen("CONOUT$", "wt", stdout);
-		printf("hello world! in Win32 API Application.. \n");
+		printf("Test start!\n");
 		return 0;
 	case WM_DESTROY:
 		FreeConsole();
@@ -77,55 +79,30 @@ LRESULT CALLBACK WndProc(HWND hWnd, UINT iMessage, WPARAM wParam, LPARAM lParam)
 	case WM_LBUTTONDOWN:
 		printf("left button was pressed\n");
 		return 0;
-
-
-#if 0
-	case WM_CHAR:
-		printf("WM CHAR\n");
+	case WM_RBUTTONDOWN:
+		printf("test\n");
 		return 0;
-	case WM_INPUT:
-		printf("WM INPUT\n");
-		return 0;
-#else
+
 	case WM_INPUT: {
-
 		UINT dwSize;
-
-		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL,
-			&dwSize, sizeof(RAWINPUTHEADER));
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, NULL, &dwSize,
+			sizeof(RAWINPUTHEADER));
 		LPBYTE lpb = new BYTE[dwSize];
 		if (lpb == NULL) {
+			printf("error\n");
 			return 0;
 		}
 
-		if (GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb,
-			&dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
-			printf("GetRawInputData does not return correct size!\n");
-		}
-
+		GetRawInputData((HRAWINPUT)lParam, RID_INPUT, lpb, &dwSize,
+			sizeof(RAWINPUTHEADER));
 		RAWINPUT *raw = (RAWINPUT *)lpb;
 
-		UINT dwSize = 0;
-
-		if (GetRawInputData((HRAWINPUT)lParam,
-			RID_INPUT, NULL, &dwSize, sizeof(RAWINPUTHEADER)) == -1) {
-			break;
+		if (raw->header.dwType == RIM_TYPEKEYBOARD) {
+			printf("keyboard\n");
 		}
-		LPBYTE lpb = new BYTE[dwSize];
-		if (lpb == NULL) {
-			break;
-		}
-		if (GetRawInputData((HRAWINPUT)lParam,
-			RID_INPUT, lpb, &dwSize, sizeof(RAWINPUTHEADER)) != dwSize) {
-			delete[] lpb;
-			break;
-		}
-
-		printf("size: %d\n", dwSize);
-
-		RAWINPUT raw = (RAWINPUT)lpb;
+		
 	} // end of WM_INPUT
-#endif
+
 	}
 	return(DefWindowProc(hWnd, iMessage, wParam, lParam));
 }
